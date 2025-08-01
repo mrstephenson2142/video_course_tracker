@@ -1,5 +1,10 @@
 # Video Course Tracker - Setup Guide
 
+## TODO: 
+
+UPDATE README: 
+- Refrences file paths instead of uploading videos. 
+
 ## 🚀 Quick Setup
 
 ### 1. Install Python Dependencies
