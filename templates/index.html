@@ -1,0 +1,1651 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Course Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #e1e5e9;
+            transition: margin-left 0.3s ease;
+            overflow-y: auto;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .sidebar.collapsed {
+            margin-left: -320px;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e1e5e9;
+            background: #f8f9fa;
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 16px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .course-selector {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e1e5e9;
+            background: white;
+        }
+
+        .course-selector select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .stats {
+            padding: 12px 20px;
+            background: #ecf0f1;
+            border-bottom: 1px solid #e1e5e9;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .course-header {
+            padding: 16px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .course-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .course-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .course-controls button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #7f8c8d;
+            transition: all 0.2s;
+        }
+
+        .course-controls button:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .course-controls button.delete:hover {
+            background: #e74c3c;
+        }
+
+        .course-actions {
+            padding: 12px 20px;
+            background: #ecf0f1;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            gap: 8px;
+        }
+
+        .course-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #3498db;
+            border: 1px solid #3498db;
+        }
+
+        .btn-outline:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .section {
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e1e5e9;
+            transition: background 0.2s;
+        }
+
+        .section-header:hover {
+            background: #ecf0f1;
+        }
+
+        .section-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .collapse-icon {
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+
+        .collapse-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .section-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .section-controls button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #7f8c8d;
+            transition: all 0.2s;
+        }
+
+        .section-controls button:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .video-list {
+            background: white;
+        }
+
+        .video-list.collapsed {
+            display: none;
+        }
+
+        .video-item {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            position: relative;
+            user-select: none;
+        }
+
+        .video-item:hover {
+            background: #f8f9fa;
+        }
+
+        .video-item.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .video-item.watched {
+            background: #d5f4e6;
+        }
+
+        .video-item.watched.active {
+            background: #2980b9;
+        }
+
+        .video-item.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+
+        .video-item.drag-over {
+            border-top: 3px solid #3498db;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            color: #bdc3c7;
+            font-size: 14px;
+            padding: 4px;
+            margin-right: 4px;
+        }
+
+        .drag-handle:hover {
+            color: #7f8c8d;
+        }
+
+        .video-controls {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .video-item:hover .video-controls {
+            opacity: 1;
+        }
+
+        .video-controls button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+
+        .video-controls button:hover {
+            background: #c0392b;
+        }
+
+        .section-video-actions {
+            padding: 8px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e5e9;
+            text-align: center;
+        }
+
+        .section-video-actions button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .section-video-actions button:hover {
+            background: #229954;
+        }
+
+        .video-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-right: 4px;
+        }
+
+        .video-name {
+            flex-grow: 1;
+            font-size: 14px;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .video-progress {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+
+        .video-item.active .video-progress {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: #ecf0f1;
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #27ae60;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .video-item.active .progress-bar {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .video-item.active .progress-fill {
+            background: white;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: #f8f9fa;
+        }
+
+        .toggle-sidebar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            border: 1px solid #e1e5e9;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 5;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .toggle-sidebar:hover {
+            background: #f8f9fa;
+        }
+
+        .video-player-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 80px 40px 20px;
+        }
+
+        .video-player {
+            width: 100%;
+            max-width: 1000px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .video-player video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .player-controls {
+            background: white;
+            padding: 20px 30px;
+            border-top: 1px solid #e1e5e9;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        }
+
+        .current-video-info {
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        .current-video-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .current-video-progress {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speed-control label {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .speed-control select {
+            padding: 8px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .player-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .nav-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .restart-button {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .restart-button:hover:not(:disabled) {
+            background: #d35400;
+            transform: translateY(-1px);
+        }
+
+        .restart-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .no-video {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 60px 40px;
+        }
+
+        .no-video h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #2c3e50;
+        }
+
+        .no-video p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 280px;
+            }
+            
+            .player-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            
+            .player-buttons {
+                justify-content: center;
+            }
+            
+            .nav-button, .restart-button {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>📚 Video Courses</h2>
+                <div class="header-buttons">
+                    <button class="btn btn-primary" onclick="addCourse()">+ Course</button>
+                </div>
+            </div>
+            
+            <div class="course-selector">
+                <select id="currentCourseSelect" onchange="switchCourse()">
+                    <option value="">Select a course...</option>
+                </select>
+            </div>
+            
+            <div class="stats" id="statsContainer">
+                Select a course to view progress
+            </div>
+            
+            <div id="courseContent">
+                <!-- Course content will be loaded here -->
+            </div>
+        </div>
+
+        <div class="main-content">
+            <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
+            
+            <div class="video-player-container">
+                <div class="video-player" id="videoPlayerContainer">
+                    <div class="no-video" id="noVideo">
+                        <h3>🎬 Ready to Learn!</h3>
+                        <p>Create courses and add your video folders to start tracking progress.<br>
+                        Your viewing history and position will be automatically saved.</p>
+                    </div>
+                    <video id="videoPlayer" controls style="display: none;">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <div class="current-video-info">
+                    <div class="current-video-title" id="currentVideoTitle">No video selected</div>
+                    <div class="current-video-progress" id="currentVideoProgress"></div>
+                </div>
+                
+                <div class="speed-control">
+                    <label>Speed:</label>
+                    <select id="speedSelect">
+                        <option value="0.5">0.5x</option>
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2x</option>
+                    </select>
+                </div>
+                
+                <div class="player-buttons">
+                    <button class="restart-button" id="restartBtn" onclick="restartVideo()" disabled>
+                        ↻ Restart
+                    </button>
+                    <button class="nav-button" id="prevBtn" disabled>← Previous</button>
+                    <button class="nav-button" id="nextBtn" disabled>Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let courses = [];
+        let currentCourse = null;
+        let currentVideo = null;
+        let progressUpdateInterval = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCourses();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Video player events
+            const video = document.getElementById('videoPlayer');
+            video.addEventListener('loadedmetadata', updateVideoInfo);
+            video.addEventListener('timeupdate', saveProgress);
+            video.addEventListener('ended', markVideoWatched);
+            
+            // Speed control - apply to current video immediately
+            document.getElementById('speedSelect').addEventListener('change', function() {
+                const newSpeed = parseFloat(this.value);
+                video.playbackRate = newSpeed;
+                console.log('Speed changed to:', newSpeed);
+            });
+            
+            // Navigation buttons
+            document.getElementById('prevBtn').addEventListener('click', playPrevious);
+            document.getElementById('nextBtn').addEventListener('click', playNext);
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+
+        async function loadCourses() {
+            try {
+                console.log('Loading courses...');
+                const response = await fetch('/api/courses');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                courses = await response.json();
+                console.log('Loaded courses:', courses);
+                
+                renderCourseSelector();
+                if (currentCourse) {
+                    // Re-find current course in updated data
+                    currentCourse = courses.find(c => c.id === currentCourse.id);
+                    if (currentCourse) {
+                        renderCurrentCourse();
+                        updateStats();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                alert('Failed to load courses: ' + error.message);
+            }
+        }
+
+        function renderCourseSelector() {
+            const select = document.getElementById('currentCourseSelect');
+            select.innerHTML = '<option value="">Select a course...</option>';
+            
+            courses.forEach(course => {
+                const option = document.createElement('option');
+                option.value = course.id;
+                option.textContent = course.name;
+                if (currentCourse && currentCourse.id === course.id) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+
+        function switchCourse() {
+            const select = document.getElementById('currentCourseSelect');
+            const courseId = parseInt(select.value);
+            
+            console.log('Switching to course ID:', courseId);
+            
+            if (courseId) {
+                currentCourse = courses.find(c => c.id === courseId);
+                console.log('Found course:', currentCourse);
+                if (currentCourse) {
+                    renderCurrentCourse();
+                    updateStats();
+                } else {
+                    console.error('Course not found in courses array');
+                }
+            } else {
+                currentCourse = null;
+                document.getElementById('courseContent').innerHTML = '';
+                document.getElementById('statsContainer').textContent = 'Select a course to view progress';
+            }
+        }
+
+        function renderCurrentCourse() {
+            if (!currentCourse) return;
+            
+            const container = document.getElementById('courseContent');
+            container.innerHTML = '';
+
+            // Course header
+            const courseHeader = document.createElement('div');
+            courseHeader.className = 'course-header';
+            courseHeader.innerHTML = `
+                <div class="course-title">${currentCourse.name}</div>
+                <div class="course-controls">
+                    <button onclick="renameCourse(${currentCourse.id})" title="Rename">✏️</button>
+                    <button onclick="deleteCourse(${currentCourse.id})" class="delete" title="Delete">🗑️</button>
+                </div>
+            `;
+            container.appendChild(courseHeader);
+
+            // Course actions
+            const courseActions = document.createElement('div');
+            courseActions.className = 'course-actions';
+            courseActions.innerHTML = `
+                <button class="btn btn-outline" onclick="addSection()">+ Section</button>
+                <button class="btn btn-success" onclick="addVideoReferences()">+ Videos</button>
+            `;
+            container.appendChild(courseActions);
+
+            // Direct videos (no section)
+            if (currentCourse.videos && currentCourse.videos.length > 0) {
+                const directVideosSection = document.createElement('div');
+                directVideosSection.className = 'section';
+                
+                const directVideosList = currentCourse.videos.map((video, videoIndex) => {
+                    const progress = video.duration > 0 ? (video.progress_time / video.duration) * 100 : 0;
+                    const timeDisplay = formatTime(video.progress_time) + (video.duration > 0 ? ' / ' + formatTime(video.duration) : '');
+                    const isActive = currentVideo && currentVideo.id === video.id ? 'active' : '';
+                    const isWatched = video.watched ? 'watched' : '';
+                    
+                    // Remove file extension from display name
+                    const displayName = video.name.replace(/\.[^/.]+$/, "");
+                    
+                    return `<div class="video-item ${isActive} ${isWatched}" data-video-id="${video.id}" data-section-index="null" data-video-index="${videoIndex}" draggable="true" onclick="playVideo(null, ${videoIndex})">
+                        <div class="drag-handle">⋮⋮</div>
+                        <div class="video-name">
+                            ${displayName}
+                            <div class="video-progress">${timeDisplay}</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                        <div class="video-controls">
+                            <button onclick="event.stopPropagation(); deleteVideo(${video.id})" title="Delete video">🗑️</button>
+                        </div>
+                    </div>`;
+                }).join('');
+                
+                directVideosSection.innerHTML = `
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="collapse-icon">📁</span>
+                            Course Videos (${currentCourse.videos.filter(v => v.watched).length}/${currentCourse.videos.length})
+                        </div>
+                    </div>
+                    <div class="section-video-actions">
+                        <button onclick="addVideoReferences(null)">+ Add Videos to Course</button>
+                    </div>
+                    <div class="video-list">${directVideosList}</div>
+                `;
+                container.appendChild(directVideosSection);
+            }
+
+            // Sections
+            if (currentCourse.sections) {
+                currentCourse.sections.forEach((section, sectionIndex) => {
+                    const sectionEl = document.createElement('div');
+                    sectionEl.className = 'section';
+                    
+                    const watchedCount = section.videos.filter(v => v.watched).length;
+                    const totalCount = section.videos.length;
+                    const isCollapsed = section.collapsed ? 'collapsed' : '';
+                    const videoListClass = section.collapsed ? 'video-list collapsed' : 'video-list';
+                    
+                    const sectionVideosList = section.videos.map((video, videoIndex) => {
+                        const progress = video.duration > 0 ? (video.progress_time / video.duration) * 100 : 0;
+                        const timeDisplay = formatTime(video.progress_time) + (video.duration > 0 ? ' / ' + formatTime(video.duration) : '');
+                        const isActive = currentVideo && currentVideo.id === video.id ? 'active' : '';
+                        const isWatched = video.watched ? 'watched' : '';
+                        
+                        // Remove file extension from display name
+                        const displayName = video.name.replace(/\.[^/.]+$/, "");
+                        
+                        return `<div class="video-item ${isActive} ${isWatched}" data-video-id="${video.id}" data-section-index="${sectionIndex}" data-video-index="${videoIndex}" draggable="true" onclick="playVideo(${sectionIndex}, ${videoIndex})">
+                            <div class="drag-handle">⋮⋮</div>
+                            <div class="video-name">
+                                ${displayName}
+                                <div class="video-progress">${timeDisplay}</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${progress}%"></div>
+                                </div>
+                            </div>
+                            <div class="video-controls">
+                                <button onclick="event.stopPropagation(); deleteVideo(${video.id})" title="Delete video">🗑️</button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    
+                    sectionEl.innerHTML = `
+                        <div class="section-header" onclick="toggleSection(${sectionIndex})">
+                            <div class="section-title">
+                                <span class="collapse-icon ${isCollapsed}">▼</span>
+                                ${section.name} (${watchedCount}/${totalCount})
+                            </div>
+                            <div class="section-controls">
+                                <button onclick="event.stopPropagation(); renameSection(${sectionIndex})" title="Rename">✏️</button>
+                                <button onclick="event.stopPropagation(); deleteSection(${sectionIndex})" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="section-video-actions ${section.collapsed ? 'collapsed' : ''}">
+                            <button onclick="addVideoReferences(${section.id})">+ Add Videos to Section</button>
+                        </div>
+                        <div class="${videoListClass}">${sectionVideosList}</div>
+                    `;
+                    
+                    container.appendChild(sectionEl);
+                });
+            }
+            
+            // Setup drag and drop for video reordering
+            setupDragAndDrop();
+        }
+        
+
+        function updateStats() {
+            if (!currentCourse) return;
+            
+            const directVideos = currentCourse.videos || [];
+            const sectionVideos = currentCourse.sections ? 
+                currentCourse.sections.flatMap(section => section.videos) : [];
+            const allVideos = [...directVideos, ...sectionVideos];
+            
+            const totalVideos = allVideos.length;
+            const watchedVideos = allVideos.filter(v => v.watched).length;
+            const totalDuration = allVideos.reduce((sum, video) => sum + video.duration, 0);
+            
+            document.getElementById('statsContainer').innerHTML = 
+                `📊 ${watchedVideos}/${totalVideos} videos watched • ${formatTime(totalDuration)} total`;
+        }
+
+        async function addCourse() {
+            const name = prompt('Enter course name:');
+            if (name && name.trim()) {
+                try {
+                    console.log('Creating course:', name);
+                    const response = await fetch('/api/courses', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({name: name.trim()})
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const newCourse = await response.json();
+                    console.log('Course created:', newCourse);
+                    
+                    await loadCourses();
+                    
+                    // Auto-select the new course
+                    document.getElementById('currentCourseSelect').value = newCourse.id;
+                    switchCourse();
+                } catch (error) {
+                    console.error('Error creating course:', error);
+                    alert('Failed to create course: ' + error.message);
+                }
+            }
+        }
+
+        async function renameCourse(courseId) {
+            const course = courses.find(c => c.id === courseId);
+            const newName = prompt('Enter new course name:', course.name);
+            if (newName) {
+                try {
+                    await fetch(`/api/courses/${courseId}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({name: newName})
+                    });
+                    loadCourses();
+                } catch (error) {
+                    console.error('Error renaming course:', error);
+                }
+            }
+        }
+
+        async function deleteCourse(courseId) {
+            const course = courses.find(c => c.id === courseId);
+            if (confirm(`Delete course "${course.name}" and all its videos?`)) {
+                try {
+                    await fetch(`/api/courses/${courseId}`, {method: 'DELETE'});
+                    currentCourse = null;
+                    loadCourses();
+                } catch (error) {
+                    console.error('Error deleting course:', error);
+                }
+            }
+        }
+
+        async function addSection() {
+            if (!currentCourse) {
+                alert('Please select a course first');
+                return;
+            }
+            
+            const name = prompt('Enter section name:');
+            if (name && name.trim()) {
+                try {
+                    console.log('Creating section:', name, 'for course:', currentCourse.id);
+                    const response = await fetch('/api/sections', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            course_id: currentCourse.id, 
+                            name: name.trim()
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const newSection = await response.json();
+                    console.log('Section created:', newSection);
+                    
+                    await loadCourses();
+                } catch (error) {
+                    console.error('Error creating section:', error);
+                    alert('Failed to create section: ' + error.message);
+                }
+            }
+        }
+
+        async function deleteSection(sectionIndex) {
+            const section = currentCourse.sections[sectionIndex];
+            if (confirm('Delete this section and all its videos?')) {
+                try {
+                    await fetch(`/api/sections/${section.id}`, {method: 'DELETE'});
+                    loadCourses();
+                } catch (error) {
+                    console.error('Error deleting section:', error);
+                }
+            }
+        }
+
+        async function renameSection(sectionIndex) {
+            const section = currentCourse.sections[sectionIndex];
+            const newName = prompt('Enter new section name:', section.name);
+            if (newName) {
+                try {
+                    await fetch(`/api/sections/${section.id}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({name: newName})
+                    });
+                    loadCourses();
+                } catch (error) {
+                    console.error('Error renaming section:', error);
+                }
+            }
+        }
+
+        async function toggleSection(sectionIndex) {
+            const section = currentCourse.sections[sectionIndex];
+            try {
+                await fetch(`/api/sections/${section.id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({collapsed: !section.collapsed})
+                });
+                loadCourses();
+            } catch (error) {
+                console.error('Error toggling section:', error);
+            }
+        }
+
+        async function addVideoReferences(targetSectionId = null) {
+            if (!currentCourse) {
+                alert('Please select a course first');
+                return;
+            }
+            
+            const folderPath = prompt('Enter the full path to your video folder (e.g., C:\\Videos\\Course or /home/user/videos):');
+            
+            if (!folderPath) return;
+
+            let sectionId = targetSectionId;
+            
+            // If no specific section was targeted, ask user what to do
+            if (sectionId === null && currentCourse.sections && currentCourse.sections.length > 0) {
+                const addToSection = confirm('Add videos to a section? Click OK to choose a section, Cancel to add directly to course.');
+                if (addToSection) {
+                    const sectionNames = currentCourse.sections.map((s, i) => (i + 1) + '. ' + s.name).join('\\n');
+                    const sectionChoice = prompt(
+                        'Choose a section (enter number):\\n' + sectionNames + '\\n\\nOr press Cancel to create a new section'
+                    );
+                    
+                    if (sectionChoice) {
+                        const sectionIndex = parseInt(sectionChoice) - 1;
+                        if (sectionIndex >= 0 && sectionIndex < currentCourse.sections.length) {
+                            sectionId = currentCourse.sections[sectionIndex].id;
+                        }
+                    } else {
+                        // Create new section
+                        const sectionName = prompt('Enter new section name:');
+                        if (sectionName) {
+                            try {
+                                const response = await fetch('/api/sections', {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'application/json'},
+                                    body: JSON.stringify({course_id: currentCourse.id, name: sectionName})
+                                });
+                                const newSection = await response.json();
+                                sectionId = newSection.id;
+                            } catch (error) {
+                                alert('Error creating section');
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Show progress
+            const uploadStatus = document.createElement('div');
+            uploadStatus.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 1000;
+                background: #3498db; color: white; padding: 15px 20px;
+                border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            
+            if (sectionId) {
+                const sectionName = currentCourse.sections.find(s => s.id === sectionId)?.name || 'Section';
+                uploadStatus.textContent = `Scanning folder for videos to add to "${sectionName}"...`;
+            } else {
+                uploadStatus.textContent = `Scanning folder for videos to add to course...`;
+            }
+            
+            document.body.appendChild(uploadStatus);
+
+            try {
+                // Browse the folder for video files
+                const browseResponse = await fetch('/api/browse-folder', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({folder_path: folderPath})
+                });
+
+                if (!browseResponse.ok) {
+                    const error = await browseResponse.json();
+                    throw new Error(error.error || 'Failed to browse folder');
+                }
+
+                const browseData = await browseResponse.json();
+                const videoFiles = browseData.videos;
+
+                if (videoFiles.length === 0) {
+                    uploadStatus.style.background = '#f39c12';
+                    uploadStatus.textContent = 'No video files found in that folder';
+                    setTimeout(() => document.body.removeChild(uploadStatus), 3000);
+                    return;
+                }
+
+                uploadStatus.textContent = `Found ${videoFiles.length} videos. Adding to library...`;
+
+                // Add video file paths to database
+                const filePaths = videoFiles.map(video => video.path);
+                
+                const response = await fetch('/api/videos', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        course_id: currentCourse.id,
+                        section_id: sectionId,
+                        file_paths: filePaths
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || `Failed to add video references (${response.status})`);
+                }
+
+                const result = await response.json();
+                uploadStatus.style.background = '#27ae60';
+                uploadStatus.textContent = `✓ Successfully added ${result.videos.length} video references`;
+                
+                loadCourses();
+
+            } catch (error) {
+                console.error('Error adding video references:', error);
+                uploadStatus.style.background = '#e74c3c';
+                uploadStatus.textContent = `❌ Failed: ${error.message}`;
+            }
+
+            setTimeout(() => {
+                if (document.body.contains(uploadStatus)) {
+                    document.body.removeChild(uploadStatus);
+                }
+            }, 4000);
+        }
+
+        function playVideo(sectionIndex, videoIndex) {
+            let video;
+            if (sectionIndex === null) {
+                // Direct course video
+                video = currentCourse.videos[videoIndex];
+            } else {
+                // Section video
+                const section = currentCourse.sections[sectionIndex];
+                video = section.videos[videoIndex];
+            }
+            
+            currentVideo = video;
+
+            const videoPlayer = document.getElementById('videoPlayer');
+            const noVideo = document.getElementById('noVideo');
+
+            // Use the video ID to get the file from the server
+            videoPlayer.src = `/video/${video.id}`;
+            videoPlayer.style.display = 'block';
+            noVideo.style.display = 'none';
+
+            // Set playback position and auto-play
+            videoPlayer.addEventListener('loadedmetadata', function() {
+                if (video.progress_time > 0) {
+                    videoPlayer.currentTime = video.progress_time;
+                }
+                
+                // Apply the current speed setting
+                const speedSelect = document.getElementById('speedSelect');
+                videoPlayer.playbackRate = parseFloat(speedSelect.value);
+                
+                // Auto-play the video
+                videoPlayer.play().catch(error => {
+                    console.log('Auto-play prevented by browser:', error);
+                    // Browser might prevent auto-play, that's okay
+                });
+            }, {once: true});
+
+            // Also apply speed immediately in case video is already loaded
+            const speedSelect = document.getElementById('speedSelect');
+            videoPlayer.playbackRate = parseFloat(speedSelect.value);
+
+            renderCurrentCourse();
+            updateNavigationButtons();
+            updateVideoInfo();
+            startProgressTracking();
+        }
+
+        function updateVideoInfo() {
+            if (currentVideo) {
+                document.getElementById('currentVideoTitle').textContent = currentVideo.name;
+                updateCurrentVideoProgress();
+            }
+        }
+
+        function updateCurrentVideoProgress() {
+            if (currentVideo) {
+                const video = document.getElementById('videoPlayer');
+                const progress = video.duration > 0 ? `${formatTime(video.currentTime)} / ${formatTime(video.duration)}` : '';
+                document.getElementById('currentVideoProgress').textContent = progress;
+            }
+        }
+
+        function startProgressTracking() {
+            if (progressUpdateInterval) {
+                clearInterval(progressUpdateInterval);
+            }
+            progressUpdateInterval = setInterval(saveProgress, 5000);
+        }
+
+        async function saveProgress() {
+            if (!currentVideo) return;
+
+            const video = document.getElementById('videoPlayer');
+            if (video.duration && video.currentTime) {
+                try {
+                    await fetch(`/api/videos/${currentVideo.id}/progress`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            currentTime: video.currentTime,
+                            duration: video.duration
+                        })
+                    });
+
+                    currentVideo.progress_time = video.currentTime;
+                    currentVideo.duration = video.duration;
+                    updateCurrentVideoProgress();
+                } catch (error) {
+                    console.error('Error saving progress:', error);
+                }
+            }
+        }
+
+        async function markVideoWatched() {
+            if (!currentVideo) return;
+
+            try {
+                await fetch(`/api/videos/${currentVideo.id}/watched`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({watched: true})
+                });
+
+                currentVideo.watched = true;
+                renderCurrentCourse();
+                updateStats();
+                
+                setTimeout(playNext, 1000);
+            } catch (error) {
+                console.error('Error marking video as watched:', error);
+            }
+        }
+
+        async function toggleVideoWatched(videoId, watched) {
+            try {
+                await fetch(`/api/videos/${videoId}/watched`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({watched})
+                });
+                loadCourses();
+            } catch (error) {
+                console.error('Error updating video status:', error);
+            }
+        }
+
+        function findCurrentVideoPosition() {
+            if (!currentVideo || !currentCourse) return {sectionIndex: -1, videoIndex: -1};
+
+            // Check direct course videos first
+            const directVideos = currentCourse.videos || [];
+            const directVideoIndex = directVideos.findIndex(v => v.id === currentVideo.id);
+            if (directVideoIndex !== -1) {
+                return {sectionIndex: null, videoIndex: directVideoIndex};
+            }
+
+            // Check section videos
+            if (currentCourse.sections) {
+                for (let sectionIndex = 0; sectionIndex < currentCourse.sections.length; sectionIndex++) {
+                    const videoIndex = currentCourse.sections[sectionIndex].videos.findIndex(v => v.id === currentVideo.id);
+                    if (videoIndex !== -1) {
+                        return {sectionIndex, videoIndex};
+                    }
+                }
+            }
+            return {sectionIndex: -1, videoIndex: -1};
+        }
+
+        function playNext() {
+            const {sectionIndex, videoIndex} = findCurrentVideoPosition();
+            
+            if (sectionIndex === null) {
+                // Currently playing direct course video
+                const directVideos = currentCourse.videos || [];
+                if (videoIndex + 1 < directVideos.length) {
+                    playVideo(null, videoIndex + 1);
+                    return;
+                }
+                // Try first video in first section
+                if (currentCourse.sections && currentCourse.sections.length > 0 && currentCourse.sections[0].videos.length > 0) {
+                    playVideo(0, 0);
+                }
+                return;
+            }
+
+            if (sectionIndex === -1) return;
+
+            const section = currentCourse.sections[sectionIndex];
+            
+            // Try next video in current section
+            if (videoIndex + 1 < section.videos.length) {
+                playVideo(sectionIndex, videoIndex + 1);
+                return;
+            }
+
+            // Try first video in next section
+            if (sectionIndex + 1 < currentCourse.sections.length) {
+                const nextSection = currentCourse.sections[sectionIndex + 1];
+                if (nextSection.videos.length > 0) {
+                    playVideo(sectionIndex + 1, 0);
+                }
+            }
+        }
+
+        function playPrevious() {
+            const {sectionIndex, videoIndex} = findCurrentVideoPosition();
+            
+            if (sectionIndex === null) {
+                // Currently playing direct course video
+                if (videoIndex > 0) {
+                    playVideo(null, videoIndex - 1);
+                }
+                return;
+            }
+            
+            if (sectionIndex === -1) return;
+
+            // Try previous video in current section
+            if (videoIndex > 0) {
+                playVideo(sectionIndex, videoIndex - 1);
+                return;
+            }
+
+            // Try last video in previous section
+            if (sectionIndex > 0) {
+                const prevSection = currentCourse.sections[sectionIndex - 1];
+                if (prevSection.videos.length > 0) {
+                    playVideo(sectionIndex - 1, prevSection.videos.length - 1);
+                }
+            } else {
+                // Try last direct course video
+                const directVideos = currentCourse.videos || [];
+                if (directVideos.length > 0) {
+                    playVideo(null, directVideos.length - 1);
+                }
+            }
+        }
+
+        function updateNavigationButtons() {
+            const {sectionIndex, videoIndex} = findCurrentVideoPosition();
+            
+            // Update Previous button
+            let hasPrevious = false;
+            if (sectionIndex === null) {
+                hasPrevious = videoIndex > 0;
+            } else if (sectionIndex !== -1) {
+                const directVideos = currentCourse.videos || [];
+                hasPrevious = sectionIndex > 0 || videoIndex > 0 || directVideos.length > 0;
+            }
+            document.getElementById('prevBtn').disabled = !hasPrevious;
+            
+            // Update Next button
+            let hasNext = false;
+            if (sectionIndex === null) {
+                const directVideos = currentCourse.videos || [];
+                const sections = currentCourse.sections || [];
+                hasNext = videoIndex + 1 < directVideos.length || sections.length > 0;
+            } else if (sectionIndex !== -1) {
+                const section = currentCourse.sections[sectionIndex];
+                hasNext = videoIndex + 1 < section.videos.length || 
+                         sectionIndex + 1 < currentCourse.sections.length;
+            }
+            document.getElementById('nextBtn').disabled = !hasNext;
+            
+            // Update Restart button - enabled when video is playing
+            const hasCurrentVideo = currentVideo !== null;
+            document.getElementById('restartBtn').disabled = !hasCurrentVideo;
+        }
+
+        function restartVideo() {
+            if (!currentVideo) return;
+            
+            const videoPlayer = document.getElementById('videoPlayer');
+            const speedSelect = document.getElementById('speedSelect');
+            
+            // Reset to beginning
+            videoPlayer.currentTime = 0;
+            
+            // Ensure speed is applied
+            videoPlayer.playbackRate = parseFloat(speedSelect.value);
+            
+            // Auto-play from the start
+            videoPlayer.play().catch(error => {
+                console.log('Auto-play prevented by browser:', error);
+            });
+            
+            // Update progress immediately
+            updateCurrentVideoProgress();
+            
+            // Save the restart position
+            saveProgress();
+        }
+
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return '0:00';
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        async function deleteVideo(videoId) {
+            // Find the video name for confirmation
+            let videoName = 'this video';
+            const allVideos = [
+                ...(currentCourse.videos || []),
+                ...(currentCourse.sections || []).flatMap(section => section.videos)
+            ];
+            const video = allVideos.find(v => v.id === videoId);
+            if (video) {
+                videoName = video.name.replace(/\.[^/.]+$/, ""); // Remove extension
+            }
+            
+            if (confirm(`Delete "${videoName}"? This will remove the video reference and all progress data.`)) {
+                try {
+                    const response = await fetch(`/api/videos/${videoId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to delete video (${response.status})`);
+                    }
+                    
+                    // If we're deleting the currently playing video, stop playback
+                    if (currentVideo && currentVideo.id === videoId) {
+                        const videoPlayer = document.getElementById('videoPlayer');
+                        const noVideo = document.getElementById('noVideo');
+                        
+                        videoPlayer.src = '';
+                        videoPlayer.style.display = 'none';
+                        noVideo.style.display = 'block';
+                        
+                        currentVideo = null;
+                        
+                        if (progressUpdateInterval) {
+                            clearInterval(progressUpdateInterval);
+                            progressUpdateInterval = null;
+                        }
+                        
+                        document.getElementById('currentVideoTitle').textContent = 'No video selected';
+                        document.getElementById('currentVideoProgress').textContent = '';
+                    }
+                    
+                    // Reload courses to update the display
+                    await loadCourses();
+                    
+                    console.log('Video deleted successfully');
+                } catch (error) {
+                    console.error('Error deleting video:', error);
+                    alert('Failed to delete video: ' + error.message);
+                }
+            }
+        }
+
+        // Drag and Drop functionality
+        let draggedElement = null;
+        let draggedVideoId = null;
+        let draggedFromSection = null;
+        let draggedFromIndex = null;
+
+        function setupDragAndDrop() {
+            const videoItems = document.querySelectorAll('.video-item[draggable="true"]');
+            
+            videoItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragend', handleDragEnd);
+                item.addEventListener('dragenter', handleDragEnter);
+                item.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            draggedVideoId = parseInt(this.dataset.videoId);
+            draggedFromSection = this.dataset.sectionIndex === 'null' ? null : parseInt(this.dataset.sectionIndex);
+            draggedFromIndex = parseInt(this.dataset.videoIndex);
+            
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            if (this !== draggedElement) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            if (this === draggedElement) return;
+            
+            const dropVideoId = parseInt(this.dataset.videoId);
+            const dropSection = this.dataset.sectionIndex === 'null' ? null : parseInt(this.dataset.sectionIndex);
+            const dropIndex = parseInt(this.dataset.videoIndex);
+            
+            // Only allow reordering within the same section/course level
+            if (draggedFromSection !== dropSection) {
+                this.classList.remove('drag-over');
+                return;
+            }
+            
+            // Reorder the videos
+            reorderVideos(draggedVideoId, dropVideoId, draggedFromSection, draggedFromIndex, dropIndex);
+            
+            this.classList.remove('drag-over');
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            
+            // Clean up all drag-over classes
+            document.querySelectorAll('.video-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+            
+            draggedElement = null;
+            draggedVideoId = null;
+            draggedFromSection = null;
+            draggedFromIndex = null;
+        }
+
+        async function reorderVideos(draggedVideoId, dropVideoId, sectionIndex, fromIndex, toIndex) {
+            try {
+                // Get the videos array to reorder
+                let videos;
+                if (sectionIndex === null) {
+                    videos = currentCourse.videos;
+                } else {
+                    videos = currentCourse.sections[sectionIndex].videos;
+                }
+                
+                // Remove the dragged video from its original position
+                const draggedVideo = videos.splice(fromIndex, 1)[0];
+                
+                // Insert it at the new position
+                let newIndex = toIndex;
+                if (fromIndex < toIndex) {
+                    newIndex = toIndex - 1; // Adjust for the removed item
+                }
+                videos.splice(newIndex, 0, draggedVideo);
+                
+                // Update order_index for all affected videos
+                const updatePromises = [];
+                for (let i = 0; i < videos.length; i++) {
+                    videos[i].order_index = i + 1;
+                    updatePromises.push(
+                        fetch(`/api/videos/${videos[i].id}/order`, {
+                            method: 'PUT',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({order_index: i + 1})
+                        })
+                    );
+                }
+                
+                await Promise.all(updatePromises);
+                
+                // Refresh the display
+                renderCurrentCourse();
+                
+                console.log('Videos reordered successfully');
+            } catch (error) {
+                console.error('Error reordering videos:', error);
+                alert('Failed to reorder videos: ' + error.message);
+                // Reload courses to reset the display
+                loadCourses();
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            
+            switch(e.key) {
+                case ' ':
+                    e.preventDefault();
+                    const video = document.getElementById('videoPlayer');
+                    if (video.style.display !== 'none') {
+                        if (video.paused) video.play();
+                        else video.pause();
+                    }
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    playPrevious();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    playNext();
+                    break;
+                case 'f':
+                    e.preventDefault();
+                    const videoEl = document.getElementById('videoPlayer');
+                    if (videoEl.style.display !== 'none' && videoEl.requestFullscreen) {
+                        videoEl.requestFullscreen();
+                    }
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
