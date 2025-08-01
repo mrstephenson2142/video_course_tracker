@@ -2,6 +2,8 @@
 
 A local Flask web app for organizing and watching your personal video courses with progress tracking.
 
+Made with Claude.ai
+
 ---
 
 ## 🔧 Requirements
