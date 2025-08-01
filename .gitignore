@@ -1,0 +1,4 @@
+/.venv
+/templates
+/videos
+/video_tracker.db
