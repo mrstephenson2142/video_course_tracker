@@ -3,9 +3,11 @@
 ## TODO: 
 
 UPDATE README: 
-- Refrences file paths instead of uploading videos. 
+- Refrences file paths instead of uploading videos. Haven't confirmed all features Claude talks about exist. The web app was updated several times without updating the README. 
 
 ## 🚀 Quick Setup
+
+You can use this quick setup, but probably want to use a virtual environment. 
 
 ### 1. Install Python Dependencies
 ```bash
@@ -24,17 +26,12 @@ video-tracker/
     └── index.html          # Web interface
 ```
 
-### 3. Save the Files
-- Copy the **Flask Video Course Tracker** code into `app.py`
-- Create a `templates` folder
-- Copy the **templates/index.html** code into `templates/index.html`
-
-### 4. Run the Application
+### 3. Run the Application
 ```bash
 python app.py
 ```
 
-### 5. Open in Browser
+### 4. Open in Browser
 Navigate to: **http://localhost:5000**
 
 ---
